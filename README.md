@@ -1,8 +1,15 @@
-# Ralph
+# My take on the trending Ralph Loop
+
+Forked from [snarktank/ralph](https://github.com/snarktank/ralph)
+
+## Key differences
+1. `prd.md` is one per project
+2. implementation plans are the core units of information to generate a `ralph.json` (ex `prd.json`)
+3. support for opencode
 
 ![Ralph](ralph.webp)
 
-Ralph is an autonomous AI agent loop that runs AI coding tools ([Amp](https://ampcode.com), [Claude Code](https://docs.anthropic.com/en/docs/claude-code), or [OpenCode](https://opencode.ai)) repeatedly until all PRD items are complete. Each iteration is a fresh instance with clean context. Memory persists via git history, `progress.txt`, and `prd.json`.
+Ralph is an autonomous AI agent loop that runs AI coding tools ([Amp](https://ampcode.com), [Claude Code](https://docs.anthropic.com/en/docs/claude-code), or [OpenCode](https://opencode.ai)) repeatedly until all user stories are complete. Each iteration is a fresh instance with clean context. Memory persists via git history, `progress.txt`, and `ralph.json`.
 
 Based on [Geoffrey Huntley's Ralph pattern](https://ghuntley.com/ralph/).
 
@@ -66,27 +73,37 @@ This enables automatic handoff when context fills up, allowing Ralph to handle l
 
 ## Workflow
 
-### 1. Create a PRD
+### 1. Create a PRD (once per project)
 
-Use the PRD skill to generate a detailed requirements document:
-
-```
-Load the prd skill and create a PRD for [your feature description]
-```
-
-Answer the clarifying questions. The skill saves output to `tasks/prd-[feature-name].md`.
-
-### 2. Convert PRD to Ralph format
-
-Use the Ralph skill to convert the markdown PRD to JSON:
+Use the PRD skill to generate your project's canonical requirements document:
 
 ```
-Load the ralph skill and convert tasks/prd-[feature-name].md to prd.json
+Load the prd skill and create a PRD for [your project]
 ```
 
-This creates `prd.json` with user stories structured for autonomous execution.
+Answer the clarifying questions. The skill saves output to `prd.md` in project root.
 
-### 3. Run Ralph
+### 2. Create an Implementation Plan (per feature)
+
+Use the IP skill to break down a feature into user stories:
+
+```
+Load the ip skill and create an implementation plan for [feature name]
+```
+
+The skill reads `prd.md` for context and saves to `tasks/implementation-plan-[feature-name].md`.
+
+### 3. Convert IP to Ralph format
+
+Use the Ralph skill to convert the implementation plan to JSON:
+
+```
+Load the ralph skill and convert tasks/implementation-plan-[feature-name].md to ralph.json
+```
+
+This creates `ralph.json` with user stories structured for autonomous execution.
+
+### 4. Run Ralph
 
 ```bash
 # Using Amp (default)
@@ -104,12 +121,12 @@ Default is 10 iterations. Use `--tool amp`, `--tool claude`, or `--tool opencode
 > **Note:** OpenCode does not automatically read the codebase. All context is provided via the prompt file (`OPENCODE.md`). Ensure `opencode.json` is configured in your project root.
 
 Ralph will:
-1. Create a feature branch (from PRD `branchName`)
+1. Create a feature branch (from `ralph.json` `branchName`)
 2. Pick the highest priority story where `passes: false`
 3. Implement that single story
 4. Run quality checks (typecheck, tests)
 5. Commit if checks pass
-6. Update `prd.json` to mark story as `passes: true`
+6. Update `ralph.json` to mark story as `passes: true`
 7. Append learnings to `progress.txt`
 8. Repeat until all stories pass or max iterations reached
 
@@ -121,11 +138,12 @@ Ralph will:
 | `prompt.md` | Prompt template for Amp |
 | `CLAUDE.md` | Prompt template for Claude Code |
 | `OPENCODE.md` | Prompt template for OpenCode |
-| `prd.json` | User stories with `passes` status (the task list) |
-| `prd.json.example` | Example PRD format for reference |
+| `ralph.json` | User stories with `passes` status (the task list) |
+| `ralph.json.example` | Example ralph.json format for reference |
 | `progress.txt` | Append-only learnings for future iterations |
-| `skills/prd/` | Skill for generating PRDs |
-| `skills/ralph/` | Skill for converting PRDs to JSON |
+| `skills/prd/` | Skill for generating the project PRD |
+| `skills/ip/` | Skill for generating implementation plans from PRD |
+| `skills/ralph/` | Skill for converting implementation plans to ralph.json |
 | `flowchart/` | Interactive visualization of how Ralph works |
 
 ## Flowchart
@@ -149,11 +167,11 @@ npm run dev
 Each iteration spawns a **new AI instance** (Amp, Claude Code, or OpenCode) with clean context. The only memory between iterations is:
 - Git history (commits from previous iterations)
 - `progress.txt` (learnings and context)
-- `prd.json` (which stories are done)
+- `ralph.json` (which stories are done)
 
 ### Small Tasks
 
-Each PRD item should be small enough to complete in one context window. If a task is too big, the LLM runs out of context before finishing and produces poor code.
+Each user story should be small enough to complete in one context window. If a task is too big, the LLM runs out of context before finishing and produces poor code.
 
 Right-sized stories:
 - Add a database column and migration
@@ -196,7 +214,7 @@ Check current state:
 
 ```bash
 # See which stories are done
-cat prd.json | jq '.userStories[] | {id, title, passes}'
+cat ralph.json | jq '.userStories[] | {id, title, passes}'
 
 # See learnings from previous iterations
 cat progress.txt

@@ -5,18 +5,34 @@ description: "Generate a Product Requirements Document (PRD) for a new feature. 
 
 # PRD Generator
 
-Create detailed Product Requirements Documents that are clear, actionable, and suitable for implementation.
+Create the **canonical Product Requirements Document** for a project. This is the single source of truth for product context, goals, and constraints.
 
 ---
 
 ## The Job
 
-1. Receive a feature description from the user
+1. Receive a project/product description from the user
 2. Ask 3-5 essential clarifying questions (with lettered options)
 3. Generate a structured PRD based on answers
-4. Save to `tasks/prd-[feature-name].md`
+4. Save to `prd.md` (project root)
 
 **Important:** Do NOT start implementing. Just create the PRD.
+
+---
+
+## Relationship to Implementation Plans
+
+The PRD (`prd.md`) is the **project-level** document. It defines:
+- Product context, goals, and terminology
+- High-level features and scope
+- Constraints and non-goals
+
+**Implementation Plans** (created by the `ip` skill) are **feature-level** documents that:
+- Reference `prd.md` for context
+- Break down specific features into user stories
+- Are converted to `ralph.json` for autonomous execution
+
+**Flow:** `prd.md` (one per project) → multiple `implementation-plan-*.md` → one `ralph.json` at a time
 
 ---
 
@@ -134,8 +150,8 @@ The PRD reader may be a junior developer or AI agent. Therefore:
 ## Output
 
 - **Format:** Markdown (`.md`)
-- **Location:** `tasks/`
-- **Filename:** `prd-[feature-name].md` (kebab-case)
+- **Location:** Project root
+- **Filename:** `prd.md`
 
 ---
 
@@ -237,4 +253,4 @@ Before saving the PRD:
 - [ ] User stories are small and specific
 - [ ] Functional requirements are numbered and unambiguous
 - [ ] Non-goals section defines clear boundaries
-- [ ] Saved to `tasks/prd-[feature-name].md`
+- [ ] Saved to `prd.md`
